@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AI_cw
 {
@@ -11,84 +9,95 @@ namespace AI_cw
     {
         static void Main(string[] args)
         {
+            // get the input file and turn the input into int array:
             string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, string.Concat(args[0], ".cav"));
             string outputfilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, string.Concat(args[0], ".csn"));
             string[] input = File.ReadAllLines(filePath);
             string[] split = input[0].Split(',');
             int[] inputNo = Array.ConvertAll(split, int.Parse);
-            int numOfVacs = inputNo[0];
-            double goal;
-            int lastX = inputNo[numOfVacs * 2 - 1];
-            int lastY = inputNo[numOfVacs * 2];
 
+            // get the total number of caverns and the last cavern (*2 because they're pairs):
+            int numberOfCaverns = inputNo[0];
+            int lastX = inputNo[numberOfCaverns * 2 - 1];
+            int lastY = inputNo[numberOfCaverns * 2];
+
+            // create a list of type Cavern and populate it with all the locations and target costs:
             List<Cavern> cavernsGlobal = new List<Cavern>();
-
-            // create a list with all the nodes and coordinates:
             int count = 1;
-            for (int i = 1; i < numOfVacs * 2; i += 2)
+            for (int i = 1; i < numberOfCaverns * 2; i += 2)
             {
-                goal = CalculateCost(inputNo[i], inputNo[i + 1], lastX, lastY); // ? maybe do that someplace else?
+                double goal = CalculateCost(inputNo[i], inputNo[i + 1], lastX, lastY);
                 Cavern c1 = new Cavern(inputNo[i], inputNo[i + 1], count, goal);
                 cavernsGlobal.Add(c1);
                 count++;
             }
 
+            List<Cavern> cavernQueue = new List<Cavern>();
 
-            List<int> bestOutput = new List<int>();
-            List<Cavern> cavernOptions = new List<Cavern>();
-            List<Cavern> visitedOptions = new List<Cavern>();
+            // get the first cavern and add it to the queue:
             Cavern currentCav = new Cavern();
             currentCav = cavernsGlobal.ElementAt(0);
+            cavernQueue.Add(currentCav);
 
-
-            cavernOptions.Add(currentCav);
-            while(cavernOptions.Any())
+            // while there are options:
+            while (cavernQueue.Any())
             {
-                cavernOptions = cavernOptions.OrderBy(x => x.TotalCost).ToList();
-                currentCav = cavernOptions.First();
-                cavernOptions.Remove(currentCav);
+                // reorder by total cost and pop the lowest cost cavern:
+                cavernQueue = cavernQueue.OrderBy(x => x.TotalCost).ToList();
+                currentCav = cavernQueue.First();
+                cavernQueue.Remove(currentCav);
 
-                var walkableCaverns= WhereToGo(currentCav.CavernNo, inputNo, cavernsGlobal).OrderBy(x => x.TotalCost);
-                foreach (Cavern c in walkableCaverns)
+                // find cavern connections and explore:
+                var connectedCaverns = WhereToGo(currentCav.CavernNo, inputNo, cavernsGlobal).OrderBy(x => x.TotalCost);
+                foreach (Cavern c in connectedCaverns)
                 {
-
-                    if (c.State == 2)
+                    if (c.Visited == true)
                         continue;
 
+                    // distance to this connection:
                     double costToTravelTo = CalculateCost(currentCav.X, currentCav.Y, c.X, c.Y);
+                    // if the connection had its distance from start calculated or if the current cavern distance and the cost to travel is lower to get there:
                     if (c.DistanceFromStart == 0 || currentCav.DistanceFromStart + costToTravelTo < c.DistanceFromStart )
                     {
+                        // save the new distance and total cost or update it and save the new parent:
+                        // saving in the all caverns list:
                         c.DistanceFromStart = currentCav.DistanceFromStart + costToTravelTo;
                         c.CameFrom = currentCav;
+                        c.TotalCost = c.DistanceFromStart + c.GoalDistance;
                         cavernsGlobal.ElementAt(c.CavernNo - 1).DistanceFromStart = c.DistanceFromStart;
                         cavernsGlobal.ElementAt(c.CavernNo - 1).CameFrom = currentCav;
-                        c.TotalCost = c.DistanceFromStart + c.GoalDistance;
                         cavernsGlobal.ElementAt(c.CavernNo - 1).TotalCost = c.TotalCost;
-                        if (!cavernOptions.Contains(c))
+
+                        // if the connection is not in the queue already, save it:
+                        if (!cavernQueue.Contains(c))
                         {
-                            cavernOptions.Add(c);
+                            cavernQueue.Add(c);
                         }
                     }
                 }
-                currentCav.State = 2;
-                if (currentCav.CavernNo==numOfVacs)
+                currentCav.Visited = true;
+                // check if at destination:
+                if (currentCav.CavernNo==numberOfCaverns)
                 {
                     break;
                 }
             }
 
 
-
-            Cavern traverse = cavernsGlobal.ElementAt(numOfVacs - 1);
+            // get the path by traversing back from the last cavern:
+            List<int> bestPath = new List<int>();
+            Cavern traverse = cavernsGlobal.ElementAt(numberOfCaverns - 1);
             Console.WriteLine(traverse.DistanceFromStart);
-            bestOutput.Add(traverse.CavernNo);
+            bestPath.Add(traverse.CavernNo);
             while (traverse.CameFrom != null)
             {
                 traverse = traverse.CameFrom;
-                bestOutput.Add(traverse.CavernNo);
+                bestPath.Add(traverse.CavernNo);
             }
-            bestOutput.Reverse();
-            if (bestOutput.Count == 1)
+            bestPath.Reverse();
+
+            // count = 1 only if there is no path and the only item is the last cavern:
+            if (bestPath.Count == 1)
             {
                 Console.WriteLine("No Path");
                 using (StreamWriter file = new StreamWriter(outputfilePath, true))
@@ -98,11 +107,10 @@ namespace AI_cw
             }
             else
             {
-                Console.WriteLine(string.Join(" ", bestOutput));
-
+                Console.WriteLine(string.Join(" ", bestPath));
                 using (StreamWriter file = new StreamWriter(outputfilePath, true))
                 {
-                    file.WriteLine(string.Join(" ", bestOutput));
+                    file.WriteLine(string.Join(" ", bestPath));
                 }
             }
 
@@ -111,11 +119,12 @@ namespace AI_cw
         /// Loops through the input list to find out which cavern can be visited from the provided cavern
         /// </summary>
         /// <param name="cavernNo">current cavern</param>
-        /// <param name="input">input list</param>
+        /// <param name="input">input map list</param>
+        /// <param name="caverns">the list of all caverns</param>
         /// <returns>list of options of where to go</returns>
         public static List<Cavern> WhereToGo(int cavernNo, int[] input, List<Cavern> caverns)
         {
-            List<Cavern> order = new List<Cavern>();
+            List<Cavern> options = new List<Cavern>();
             int numOfVacs = input[0];
             int offset = numOfVacs * 2;
             int cavernIndex = offset + cavernNo;
@@ -126,12 +135,11 @@ namespace AI_cw
                 {
                     totalCost = CalculateCost(caverns.ElementAt(cavernNo - 1).X, caverns.ElementAt(cavernNo - 1).Y, caverns.ElementAt(i - 1).X, caverns.ElementAt(i - 1).Y);
                     caverns.ElementAt(i - 1).TotalCost = caverns.ElementAt(i - 1).GoalDistance + totalCost;
-                    order.Add(caverns.ElementAt(i - 1));
+                    options.Add(caverns.ElementAt(i - 1));
                 }
                 cavernIndex += numOfVacs;
             }
-
-            return order;
+            return options;
         }
         /// <summary>
         /// Calculates the distance between two caverns using Euclidean distance

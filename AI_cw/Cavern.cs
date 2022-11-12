@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AI_cw
+﻿namespace AI_cw
 {
     class Cavern
     {
@@ -15,29 +9,25 @@ namespace AI_cw
         public double TotalCost { get; set; }
         public int CavernNo { get; set; }
         public Cavern CameFrom { get; set; }
-        public int State { get; set; } // 0- unknown, 1 - open, 2- closed 
-        public bool IsWalkable { get; set; }
+        public bool Visited { get; set; }
         public Cavern(int x, int y, int num, double goal)
         {
-            State = 0;
             X = x;
             Y = y;
             CavernNo = num;
             GoalDistance = goal;
-            IsWalkable = true;
+            Visited = false;
         }
         public Cavern(int x, int y, int num)
         {
             X = x;
             Y = y;
             CavernNo = num;
-            State = 0;
-            IsWalkable = true;
+            Visited = false;
         }
         public Cavern()
         {
-            State = 0;
-            IsWalkable = true;
+            Visited = false;
         }
     }
 }
