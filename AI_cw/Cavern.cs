@@ -15,25 +15,29 @@ namespace AI_cw
         public double TotalCost { get; set; }
         public int CavernNo { get; set; }
         public Cavern CameFrom { get; set; }
-        public bool Visited { get; set; } 
+        public int State { get; set; } // 0- unknown, 1 - open, 2- closed 
+        public bool IsWalkable { get; set; }
         public Cavern(int x, int y, int num, double goal)
         {
+            State = 0;
             X = x;
             Y = y;
             CavernNo = num;
             GoalDistance = goal;
-            Visited = false;
+            IsWalkable = true;
         }
         public Cavern(int x, int y, int num)
         {
             X = x;
             Y = y;
             CavernNo = num;
-            Visited = false;
+            State = 0;
+            IsWalkable = true;
         }
         public Cavern()
         {
-            Visited = false;
+            State = 0;
+            IsWalkable = true;
         }
     }
 }
