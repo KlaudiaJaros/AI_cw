@@ -83,7 +83,6 @@ namespace AI_cw
                 }
             }
 
-
             // get the path by traversing back from the last cavern:
             List<int> bestPath = new List<int>();
             Cavern traverse = cavernsGlobal.ElementAt(numberOfCaverns - 1);
@@ -99,10 +98,10 @@ namespace AI_cw
             // count = 1 only if there is no path and the only item is the last cavern:
             if (bestPath.Count == 1)
             {
-                Console.WriteLine("No Path");
+                Console.WriteLine("0");
                 using (StreamWriter file = new StreamWriter(outputfilePath, true))
                 {
-                    file.WriteLine("No Path");
+                    file.WriteLine("0");
                 }
             }
             else
@@ -113,31 +112,32 @@ namespace AI_cw
                     file.WriteLine(string.Join(" ", bestPath));
                 }
             }
-
         }
         /// <summary>
-        /// Loops through the input list to find out which cavern can be visited from the provided cavern
+        /// Loops through the input list grid to find out which cavern can be visited from the provided cavern
         /// </summary>
         /// <param name="cavernNo">current cavern</param>
-        /// <param name="input">input map list</param>
+        /// <param name="input">input grid list</param>
         /// <param name="caverns">the list of all caverns</param>
         /// <returns>list of options of where to go</returns>
         public static List<Cavern> WhereToGo(int cavernNo, int[] input, List<Cavern> caverns)
         {
             List<Cavern> options = new List<Cavern>();
-            int numOfVacs = input[0];
-            int offset = numOfVacs * 2;
-            int cavernIndex = offset + cavernNo;
-            double totalCost = 0;
-            for (int i = 1; i < numOfVacs + 1; i++)
+            int numberOfCavs = input[0];
+            // offset to skip the cavern locations:
+            int offset = numberOfCavs * 2; 
+            // grid column: matrix start -1 + cavern number:
+            int cavernIndex = offset + cavernNo; 
+
+            // loop through each row of the grid: 
+            for (int i = 1; i < numberOfCavs + 1; i++)
             {
-                if (input[cavernIndex] == 1 && i != cavernNo)
+                // if connection found, caculate costs and add it to the list:
+                if (input[cavernIndex] == 1)
                 {
-                    totalCost = CalculateCost(caverns.ElementAt(cavernNo - 1).X, caverns.ElementAt(cavernNo - 1).Y, caverns.ElementAt(i - 1).X, caverns.ElementAt(i - 1).Y);
-                    caverns.ElementAt(i - 1).TotalCost = caverns.ElementAt(i - 1).GoalDistance + totalCost;
                     options.Add(caverns.ElementAt(i - 1));
                 }
-                cavernIndex += numOfVacs;
+                cavernIndex += numberOfCavs; // go to the next row
             }
             return options;
         }
