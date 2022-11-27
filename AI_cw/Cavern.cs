@@ -1,5 +1,9 @@
 ﻿namespace AI_cw
 {
+    /// <summary>
+    /// Cavern class to store cavern properties.
+    /// Author: Klaudia Jaros 40439268
+    /// </summary>
     class Cavern
     {
         public int X { get; set; }

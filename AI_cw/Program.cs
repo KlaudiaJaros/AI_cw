@@ -5,6 +5,12 @@ using System.Linq;
 
 namespace AI_cw
 {
+    /// <summary>
+    /// Caverns Routing Application - a program to find the best route from the first cavern to last using A* search.
+    /// Author: Klaudia Jaros 40439268
+    /// Input: .cav filename (without the extension) with the cavern locations and possible moves as a command line argument
+    /// Output: .csn file with a solution in the current program directory. The solution file contains caverns in order of visiting or 0 if no solution was found. 
+    /// </summary>
     internal class Program
     {
         static void Main(string[] args)
